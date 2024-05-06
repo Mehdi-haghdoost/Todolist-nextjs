@@ -5,8 +5,33 @@ import { config } from "@fortawesome/fontawesome-svg-core";
 config.autoAddCss = false;
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import connectToDB from "@/configs/db";
+import { verifyToken } from "@/utils/auth";
+import UserModel from "@/models/User"
+import todoModel from "@/models/Todo"
 
-function Todolist() {
+
+function Todolist({ user, todos }) {
+  console.log(user, todos);
+
+  const [isShowInput, setIsShowInput] = useState(false)
+  const [title, setTitle] = useState("")
+  const [allTodos,setAllTodos] = useState([...todos])
+
+  const addTodo = async () => {
+    const res = await fetch('/api/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ title, isComplete: false })
+    })
+    if (res.status === 201) {
+      setTitle("")
+      alert("Todo added successfully :)) ")
+    }
+  }
+
   return (
     <>
       <h1>Next-Todos</h1>
@@ -16,23 +41,25 @@ function Todolist() {
       </div>
 
       <div className="container">
-        <div className="form-container">
+        <div className="form-container" style={{ display: `${isShowInput ? "block" : "none"}` }}>
           <div className="add-form">
             <input
               id="input"
               type="text"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
               placeholder="Type your To-Do works..."
             />
-            <button type="submit" id="submit">
+            <button type="submit" id="submit" onClick={addTodo}>
               ADD
             </button>
           </div>
         </div>
         <div className="head">
           <div className="date">
-            <p>{`user.name`}</p>
+            <p>{user.firstname}-{user.lastname}</p>
           </div>
-          <div className="add">
+          <div className="add" onClick={() => setIsShowInput(true)}>
             <svg
               width="2rem"
               height="2rem"
@@ -55,24 +82,68 @@ function Todolist() {
         </div>
         <div className="pad">
           <div id="todo">
-            <ul id="tasksContainer">
+            <ul id="tasksContainer"> 
+            {
+              allTodos.map(todo => (
               <li>
                 <span className="mark">
                   <input type="checkbox" className="checkbox" />
                 </span>
                 <div className="list">
-                  <p>{`Todo.title`}</p>
+                      <p>{todo.title}</p>
                 </div>
                 <span className="delete">
                   <FontAwesomeIcon icon={faTrash} />
                 </span>
               </li>
+              ))
+            }
             </ul>
           </div>
         </div>
       </div>
     </>
   );
+}
+
+export async function getServerSideProps(context) {
+  connectToDB()
+
+  const { token } = context.req.cookies;
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: '/signin'
+      },
+    }
+  }
+
+  const tokenPayload = verifyToken(token)
+  if (!tokenPayload) {
+    return {
+      redirect: {
+        destination: '/signin'
+      },
+    }
+  }
+
+  const user = await UserModel.findOne(
+    {
+      email: tokenPayload.email
+    },
+    "firstname lastname"
+  )
+
+  const todos = await todoModel.find({ user: user._id })
+
+  return {
+    props: {
+      user: JSON.parse(JSON.stringify(user)),
+      todos: JSON.parse(JSON.stringify(todos))
+    }
+  }
+
 }
 
 export default Todolist;
