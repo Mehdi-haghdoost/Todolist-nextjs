@@ -25,6 +25,18 @@ function Todolist({ user, todos }) {
     setAllTodos(data);
   }
 
+  const removeTodo = async (id) => {
+    const res = await fetch(`/api/todos/${id}`,{
+      method : 'DELETE'
+    })
+
+    if(res.status === 200) {
+      alert('todo removed successfully :))')
+
+      getTodo()
+    }
+  }
+
   const addTodo = async () => {
     const res = await fetch('/api/todos', {
       method: 'POST',
@@ -101,7 +113,7 @@ function Todolist({ user, todos }) {
                 <div className="list">
                       <p>{todo.title}</p>
                 </div>
-                <span className="delete">
+                <span className="delete" onClick={() => removeTodo(todo._id)}>
                   <FontAwesomeIcon icon={faTrash} />
                 </span>
               </li>
