@@ -18,6 +18,13 @@ function Todolist({ user, todos }) {
   const [title, setTitle] = useState("")
   const [allTodos,setAllTodos] = useState([...todos])
 
+  const getTodo = async () => {
+    const res = await fetch('/api/todos')
+    const data = await res.json()
+
+    setAllTodos(data);
+  }
+
   const addTodo = async () => {
     const res = await fetch('/api/todos', {
       method: 'POST',
@@ -29,6 +36,8 @@ function Todolist({ user, todos }) {
     if (res.status === 201) {
       setTitle("")
       alert("Todo added successfully :)) ")
+
+      getTodo()
     }
   }
 
