@@ -9,14 +9,16 @@ import connectToDB from "@/configs/db";
 import { verifyToken } from "@/utils/auth";
 import UserModel from "@/models/User"
 import todoModel from "@/models/Todo"
+import { useRouter } from "next/router";
 
 
 function Todolist({ user, todos }) {
-  console.log(user, todos);
+  
+  const router = useRouter()
 
   const [isShowInput, setIsShowInput] = useState(false)
   const [title, setTitle] = useState("")
-  const [allTodos,setAllTodos] = useState([...todos])
+  const [allTodos, setAllTodos] = useState([...todos])
 
   const getTodo = async () => {
     const res = await fetch('/api/todos')
@@ -26,11 +28,11 @@ function Todolist({ user, todos }) {
   }
 
   const removeTodo = async (id) => {
-    const res = await fetch(`/api/todos/${id}`,{
-      method : 'DELETE'
+    const res = await fetch(`/api/todos/${id}`, {
+      method: 'DELETE'
     })
 
-    if(res.status === 200) {
+    if (res.status === 200) {
       alert('todo removed successfully :))')
 
       getTodo()
@@ -50,6 +52,16 @@ function Todolist({ user, todos }) {
       alert("Todo added successfully :)) ")
 
       getTodo()
+    }
+  }
+
+  const signOut = async () => {
+    const res = await fetch('/api/auth/signout')
+    console.log('res =>', res);
+
+    if(res.status === 200) {
+      alert('User Logout Successfully :))')
+      router.replace('/signin')
     }
   }
 
@@ -97,28 +109,28 @@ function Todolist({ user, todos }) {
               />
             </svg>
           </div>
-          <div className="time">
+          <div className="time" onClick={signOut} >
             <a href="#">Logout</a>
           </div>
         </div>
         <div className="pad">
           <div id="todo">
-            <ul id="tasksContainer"> 
-            {
-              allTodos.map(todo => (
-              <li>
-                <span className="mark">
-                  <input type="checkbox" className="checkbox" />
-                </span>
-                <div className="list">
+            <ul id="tasksContainer">
+              {
+                allTodos.map(todo => (
+                  <li>
+                    <span className="mark">
+                      <input type="checkbox" className="checkbox" />
+                    </span>
+                    <div className="list">
                       <p>{todo.title}</p>
-                </div>
-                <span className="delete" onClick={() => removeTodo(todo._id)}>
-                  <FontAwesomeIcon icon={faTrash} />
-                </span>
-              </li>
-              ))
-            }
+                    </div>
+                    <span className="delete" onClick={() => removeTodo(todo._id)}>
+                      <FontAwesomeIcon icon={faTrash} />
+                    </span>
+                  </li>
+                ))
+              }
             </ul>
           </div>
         </div>
